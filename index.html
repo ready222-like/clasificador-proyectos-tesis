@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de Proyectos de Tesis</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #2c5aa0, #4a90e2);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            max-width: 700px;
+            width: 100%;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #2c5aa0;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+        }
+        .descripcion {
+            text-align: center;
+            color: #555;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        button {
+            width: 100%;
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #1a3a6e;
+        }
+        .resultado {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f4f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+            display: none;
+        }
+        .resultado.mostrar {
+            display: block;
+        }
+        .resultado h3 {
+            color: #2c5aa0;
+            margin-bottom: 12px;
+        }
+        .definiciones {
+            margin-top: 25px;
+            padding: 18px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .definiciones h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .definiciones p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .etiqueta {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        .aplicada {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .innovacion {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .mixto {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Clasificador de Proyectos de Tesis</h1>
+        <p class="descripcion">Ingresa el título y descripción de tu proyecto para saber si pertenece a Investigación Aplicada o Innovación Tecnológica</p>
+
+        <textarea id="proyecto" placeholder="Escribe aquí el título y una breve descripción de tu proyecto..."></textarea>
+        <button onclick="clasificarProyecto()">🔍 Clasificar Proyecto</button>
+
+        <div class="resultado" id="resultado">
+            <h3>✅ Resultado de la clasificación</h3>
+            <div id="contenidoResultado"></div>
+        </div>
+
+        <div class="definiciones">
+            <h4>📌 Definiciones de referencia:</h4>
+            <p><strong>Investigación Aplicada:</strong> Busca generar o verificar conocimiento para resolver un problema concreto. Se evalúa, compara o analiza soluciones existentes. Resultado principal: conocimiento comprobado, datos y recomendaciones.</p>
+            <p><strong>Innovación Tecnológica:</strong> Crea, mejora o implementa un producto, proceso o servicio nuevo u optimizado. Resultado principal: algo funcional y puesto en uso.</p>
+        </div>
+    </div>
+
+    <script>
+        function clasificarProyecto() {
+            const texto = document.getElementById('proyecto').value.toLowerCase().trim();
+            const contenedor = document.getElementById('resultado');
+            const contenido = document.getElementById('contenidoResultado');
+            
+            if (!texto) {
+                contenido.innerHTML = '<p style="color:#d35400">⚠️ Por favor, escribe tu proyecto antes de presionar el botón.</p>';
+                contenedor.classList.add('mostrar');
+                return;
+            }
+
+            // Palabras clave por categoría
+            const palabrasAplicada = ['evaluación', 'evaluar', 'diagnóstico', 'análisis', 'estudio', 'comparación', 
+                                      'determinar', 'medir', 'validar', 'comprobar', 'investigación', 
+                                      'diagnosticar', 'identificar', 'caracterizar', 'encuestas', 'medición'];
+            const palabrasInnovacion = ['diseño', 'diseñar', 'construcción', 'construir', 'implementación', 
+                                         'implementar', 'desarrollo', 'desarrollar', 'fabricación', 
+                                         'instalación', 'crear', 'mejorar', 'optimizar', 'prototipo', 
+                                         'sistema', 'herramienta', 'equipo', 'software', 'máquina'];
+
+            let puntuacionAplicada = 0;
+            let puntuacionInnovacion = 0;
+
+            palabrasAplicada.forEach(palabra => {
+                if (texto.includes(palabra)) puntuacionAplicada++;
+            });
+
+            palabrasInnovacion.forEach(palabra => {
+                if (texto.includes(palabra)) puntuacionInnovacion++;
+            });
+
+            let clasificacion, claseEtiqueta, explicacion;
+
+            // Caso especial: implementación + evaluación = aplicada
+            if ((texto.includes('implementación') || texto.includes('implementar')) && 
+                (texto.includes('evaluación') || texto.includes('evaluar'))) {
+                puntuacionAplicada += 2;
+            }
+
+            if (puntuacionAplicada > puntuacionInnovacion) {
+                clasificacion = '🎯 Investigación Aplicada';
+                claseEtiqueta = 'aplicada';
+                explicacion = `
+                    <p><strong>¿Por qué?</strong> Tu proyecto se enfoca principalmente en <em>estudiar, evaluar, comparar o validar</em> una solución. El aporte central es generar conocimiento comprobado, datos y conclusiones que sirvan para resolver el problema en tu contexto específico.</p>
+                    <p>Los verbos clave de tu trabajo indican que el propósito principal no es crear algo nuevo desde cero, sino verificar si una solución existente funciona en las condiciones de tu zona.</p>
+                `;
+            } else if (puntuacionInnovacion > puntuacionAplicada) {
+                clasificacion = '⚙️ Innovación Tecnológica';
+                claseEtiqueta = 'innovacion';
+                explicacion = `
+                    <p><strong>¿Por qué?</strong> Tu proyecto se enfoca principalmente en <em>diseñar, construir, implementar o mejorar</em> un producto, proceso o servicio. El aporte central es entregar algo funcional y utilizable que resuelva el problema de forma práctica.</p>
+                    <p>Los verbos clave indican que tu principal contribución es la creación u optimización de una herramienta o solución puesta en uso.</p>
+                `;
+            } else {
+                clasificacion = '🔄 Ambas categorías (componente mixto)';
+                claseEtiqueta = 'mixto';
+                explicacion = `
+                    <p><strong>¿Por qué?</strong> Tu proyecto combina elementos de ambas categorías. Implementas una solución pero también la evalúas.</p>
+                    <p><em>Recomendación:</em> Define cuál es tu aporte principal. Si el énfasis está en medir y analizar resultados → <strong>Investigación Aplicada</strong>. Si el énfasis está en construir o poner en marcha la solución → <strong>Innovación Tecnológica</strong>.</p>
+                `;
+            }
+
+            contenido.innerHTML = `
+                <span class="etiqueta ${claseEtiqueta}">${clasificacion}</span>
+                ${explicacion}
+            `;
+            contenedor.classList.add('mostrar');
+        }
+    </script>
+</body>
+</html>
